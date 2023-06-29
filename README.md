@@ -1,6 +1,6 @@
 <p align="center">
     <img alt="ViewCount" src="https://views.whatilearened.today/views/github/agcrisbp/github-clone-count-badge.svg">
-    <img alt='GitHub Clones' src='https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url=https://gist.githubusercontent.com/MShawon/cf89f3274d06170b8a4973039aa6220a/raw/clone.json&logo=github'>
+    <img alt='GitHub Clones' src='https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url=https://gist.githubusercontent.com/agcrisbp/e5a3a9536cd87c93493c5ebc1aa59fb2/raw/cb0c8b33a60efafbbc32fa345b1423a1d51a322b/clone.json&logo=github'>
 </p>
 
 # GitHub Clone Count APi
