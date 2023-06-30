@@ -7,7 +7,7 @@
 ## Setup
 1) Create a new workflow from the `Actions` tab of your repository and paste the following.
 ```yaml
-name: GitHub Clone Count Update Everyday
+name: GitHub Clone Count Update 24h
 
 on:
   schedule:
