@@ -1,4 +1,4 @@
-name: GitHub Clone Count Update Every 24h
+name: GitHub Clone Count Update Everyday
 
 on:
   schedule:
