@@ -7,7 +7,7 @@
 ## Setup
 1) Create a new workflow from the `Actions` tab of your repository and paste the following.
 ```yaml
-name: GitHub Clone Count Update Every 24h
+name: GitHub Clone Count Update Everyday
 
 on:
   schedule:
@@ -20,60 +20,58 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up GitHub CLI
+      
+      - name: gh login
         run: echo "${{ secrets.SECRET_TOKEN }}" | gh auth login --with-token
-        env:
-          GH_TOKEN: ${{ secrets.SECRET_TOKEN }}
 
-      - name: Parse latest clone count
+      - name: parse latest clone count
         run: |
           curl --user "${{ github.actor }}:${{ secrets.SECRET_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/traffic/clones \
             > clone.json
 
-      - name: Create gist and download previous count
+      - name: create gist and download previous count
         id: set_id
         run: |
-          if gh secret list | grep -q "GIST_ID"; then
+          if gh secret list | grep -q "GIST_ID"
+          then
               echo "GIST_ID found"
-              GIST_ID=$(gh secret list | grep "GIST_ID" | awk '{print $2}')
-              echo "GIST_ID=$GIST_ID" >> $GITHUB_ENV
-              curl -L https://gist.githubusercontent.com/${{ github.actor }}/${GIST_ID}/raw/clone.json -o clone_before.json
-              if grep -q '404: Not Found' clone_before.json; then
-                  echo "GIST_ID not valid anymore. Creating another gist..."
-                  gist_id=$(gh gist create clone.json --public | awk -F / '{print $NF}')
-                  echo $gist_id | gh secret set GIST_ID
-                  echo "GIST_ID=$gist_id" >> $GITHUB_ENV
-                  cp clone.json clone_before.json
+              echo ::set-output name=GIST::${{ secrets.GIST_ID }}
+              curl https://gist.githubusercontent.com/${{ github.actor }}/${{ secrets.GIST_ID }}/raw/clone.json > clone_before.json
+              if cat clone_before.json | grep '404: Not Found'; then
+                echo "GIST_ID not valid anymore. Creating another gist..."
+                gist_id=$(gh gist create clone.json | awk -F / '{print $NF}')
+                echo $gist_id | gh secret set GIST_ID
+                echo ::set-output name=GIST::$gist_id
+                cp clone.json clone_before.json
+                git rm --ignore-unmatch  CLONE.md
               fi
           else
               echo "GIST_ID not found. Creating a gist..."
-              gist_id=$(gh gist create clone.json --public | awk -F / '{print $NF}')
+              gist_id=$(gh gist create clone.json | awk -F / '{print $NF}')
               echo $gist_id | gh secret set GIST_ID
-              echo "GIST_ID=$gist_id" >> $GITHUB_ENV
+              echo ::set-output name=GIST::$gist_id
               cp clone.json clone_before.json
           fi
 
-      - name: Update clone.json
+      - name: update clone.json
         run: |
-          curl -L https://raw.githubusercontent.com/agcrisbp/github-clone-count-api/master/main.py -o main.py
+          curl https://raw.githubusercontent.com/agcrisbp/github-clone-count-api/master/main.py > main.py
           python3 main.py
 
       - name: Update gist with latest count
         run: |
-          GIST_ID=$(echo $GIST_ID)
-          content=$(jq -Rs . < clone.json)
-          echo "{\"description\": \"${{ github.repository }} clone statistics\", \"files\": {\"clone.json\": {\"content\": $content}}}" > post_clone.json
+          content=$(sed -e 's/\\/\\\\/g' -e 's/\t/\\t/g' -e 's/\"/\\"/g' -e 's/\r//g' "clone.json" | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g')
+          echo '{"description": "${{ github.repository }} clone statistics", "files": {"clone.json": {"content": "'"$content"'"}}}' > post_clone.json
           curl -s -X PATCH \
             --user "${{ github.actor }}:${{ secrets.SECRET_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d @post_clone.json https://api.github.com/gists/$GIST_ID
+            -d @post_clone.json https://api.github.com/gists/${{ steps.set_id.outputs.GIST }} > /dev/null 2>&1
 
           if [ ! -f CLONE.md ]; then
             shields="https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url="
-            url="https://gist.githubusercontent.com/${{ github.actor }}/${GIST_ID}/raw/clone.json"
+            url="https://gist.githubusercontent.com/${{ github.actor }}/${{ steps.set_id.outputs.GIST }}/raw/clone.json"
             repo="https://github.com/agcrisbp/github-clone-count-api"
             echo ''> CLONE.md
             echo '
@@ -98,7 +96,8 @@ jobs:
       - name: Push
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.SECRET_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
 ```
 2) But to use this, you will need a [personal access token](https://github.com/settings/tokens?type=beta) and make sure to select the following scopes
 
