@@ -7,7 +7,7 @@
 ## Setup
 1) Create a new workflow from the `Actions` tab of your repository and paste the following.
 ```yaml
-name: GitHub Clone Count Update Everyday
+name: GitHub Clone Count Update Every 24h
 
 on:
   schedule:
@@ -97,7 +97,6 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
 ```
 2) But to use this, you will need a [personal access token](https://github.com/settings/tokens?type=beta) and make sure to select the following scopes
 
