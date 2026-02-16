@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt='GitHub Clones' src='https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url=https://gist.githubusercontent.com/agcrisbp/c582e94744fef240bcd695827b79e13a/raw/5e60c87329352a39abeb7df08d386f2814743f79/clone.json&logo=github'>
+    <img alt='GitHub Clones' src='https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url=https://gist.githubusercontent.com/agcrisbp/c582e94744fef240bcd695827b79e13a/raw/clone.json&logo=github'>
 </p>
 
 # GitHub Clone Count APi
