@@ -7,12 +7,15 @@
 ## Setup
 1) Create a new workflow from the `Actions` tab of your repository and paste the following.
 ```yaml
-name: GitHub Clone Count Update Every 24h
+name: GitHub Clone Count Update
 
 on:
   schedule:
-    - cron: "0 */24 * * *"
+    - cron: '0 0 * * *'
   workflow_dispatch:
+  
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -57,8 +60,11 @@ jobs:
 
       - name: update clone.json
         run: |
-          curl https://raw.githubusercontent.com/agcrisbp/github-clone-count-api/master/main.py > main.py
-          python3 main.py
+            response=$(curl -s -X POST https://api.charisprod.xyz/v1/github/clone \
+              -F "now=@clone.json" \
+              -F "before=@clone_before.json")
+        
+            echo "$response" | jq '.' > clone.json
 
       - name: Update gist with latest count
         run: |
@@ -72,7 +78,7 @@ jobs:
           if [ ! -f CLONE.md ]; then
             shields="https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url="
             url="https://gist.githubusercontent.com/${{ github.actor }}/${{ steps.set_id.outputs.GIST }}/raw/clone.json"
-            repo="https://github.com/agcrisbp/github-clone-count-api"
+            repo="https://github.com/${{ github.repository }}"
             echo ''> CLONE.md
             echo '
             **Markdown**
@@ -98,10 +104,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
-2) But to use this, you will need a [personal access token](https://github.com/settings/tokens?type=beta) and make sure to select the following scopes
+2) But to use this, you will need a [Personal access tokens (classic)](https://github.com/settings/tokens) and make sure to select the following scopes: `repo` (full access, required for secrets/traffic in org repos) and `gist` (for creating/updating gists).
 
-<p align='center'><img src='scopes.png'></p>
-
-3) Next, add action secrets to this repository like https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository this. Remember `SECRET_TOKEN` must be the secret name. And the value will be the **[personal access token](https://github.com/settings/tokens?type=beta)** you just generated.  
+3) Next, add action secrets to this repository like [Using secrets in GitHub Actions](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository). Remember `SECRET_TOKEN` must be the secret name. And the value will be the **[Personal access tokens (classic)](https://github.com/settings/tokens)** you just generated.  
 
 <p align='center'><img src='token.png' width='90%'></p>
